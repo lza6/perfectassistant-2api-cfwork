@@ -1,0 +1,11 @@
+name = "perfectassistant-2api"
+main = "worker.js"
+compatibility_date = "2025-11-01"
+
+# 上游为免费匿名端点，无需绑定；API_MASTER_KEY 建议用 secret 注入：
+#   wrangler secret put API_MASTER_KEY
+# 未设置时回退到 worker.js 内的默认弱密钥 "1"（仅本地/自用）
+
+[vars]
+# 留空即可；如需自定义，取消注释：
+# API_MASTER_KEY = "your-strong-key"

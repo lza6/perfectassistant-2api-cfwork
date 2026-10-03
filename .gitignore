@@ -1,0 +1,17 @@
+# 依赖与构建产物
+node_modules/
+dist/
+.wrangler/
+
+# Rust 本地版构建产物
+local/target/
+local/config.json
+
+# 抓取产物（体积大，含上游源码，不入库）
+captures/
+
+# 编辑器/系统
+.DS_Store
+.idea/
+.vscode/
+*.log

@@ -1,0 +1,18 @@
+{
+  "listen_addr": "127.0.0.1:47832",
+  "upstream_base_url": "https://perfectassistant.ai",
+  "upstream_free_path": "/ai/free",
+  "api_keys": [],
+  "ui_password": "",
+  "default_tone": "professional",
+  "default_language": "en",
+  "default_model": "brainstorm-tool",
+  "fallback_models": ["summarize", "translate"],
+  "pseudo_chunk_chars": 120,
+  "pseudo_chunk_delay_ms": 8,
+  "request_timeout_sec": 120,
+  "cors_allow_origins": [],
+  "skip_upstream_check": false,
+  "redact_logs": true,
+  "pass_through_unknown_models": true
+}

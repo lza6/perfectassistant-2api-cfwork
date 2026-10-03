@@ -1,0 +1,23 @@
+{
+  "name": "perfectassistant-2api",
+  "version": "2.0.0",
+  "description": "把 perfectassistant.ai 免费 AI 服务转换为 OpenAI/Anthropic 兼容 API。Cloudflare Worker 单文件版 + 本地 Rust 网关 (local/)。",
+  "type": "module",
+  "main": "worker.js",
+  "scripts": {
+    "dev": "wrangler dev",
+    "deploy": "wrangler deploy",
+    "test": "node scripts/worker-smoke.mjs",
+    "test:local": "cd local && cargo test"
+  },
+  "keywords": [
+    "cloudflare-worker",
+    "openai-api",
+    "anthropic-api",
+    "perfectassistant",
+    "2api",
+    "proxy"
+  ],
+  "author": "lza6",
+  "license": "Apache-2.0"
+}

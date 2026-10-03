@@ -1,0 +1,39 @@
+[package]
+name = "perfectassistant2api"
+version = "0.1.0"
+edition = "2021"
+description = "PerfectAssistant 免费模型 OpenAI/Anthropic 兼容本地 API 网关（Rust 版）"
+authors = ["lza6"]
+license = "MIT"
+
+[[bin]]
+name = "perfectassistant2api"
+path = "src/main.rs"
+
+[dependencies]
+axum = { version = "0.8", features = ["json", "macros"] }
+tokio = { version = "1", features = ["full"] }
+tower = "0.5"
+http = "1"
+serde = { version = "1", features = ["derive"] }
+serde_json = "1"
+futures = "0.3"
+uuid = { version = "1", features = ["v4"] }
+chrono = { version = "0.4", features = ["serde"] }
+tracing = "0.1"
+tracing-subscriber = { version = "0.3", features = ["env-filter"] }
+anyhow = "1"
+thiserror = "2"
+bytes = "1"
+tokio-stream = "0.1"
+reqwest = { version = "0.12", default-features = false, features = ["json", "rustls-tls", "gzip", "brotli", "socks"] }
+
+[dev-dependencies]
+tempfile = "3"
+http-body-util = "0.1"
+tower = { version = "0.5", features = ["util"] }
+
+[profile.release]
+opt-level = 3
+lto = "thin"
+strip = true
