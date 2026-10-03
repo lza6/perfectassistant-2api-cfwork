@@ -31,6 +31,7 @@ pub fn build_router(state: AppState) -> Router {
         .route("/v1/models", get(handle_v1_models))
         .route("/v1/chat/completions", post(handle_chat_completions))
         .route("/v1/messages", post(handle_messages))
+        .route("/v1/messages/count_tokens", post(handle_count_tokens))
         .route("/api/guide", get(handle_guide))
         .route("/api/config/api-key", post(handle_config_api_key))
         .layer(axum::middleware::from_fn_with_state(
@@ -353,6 +354,21 @@ async fn handle_messages(
     }
 }
 
+// ---------- Claude Code 兼容 ----------
+
+/// Claude Code 会调用 /v1/messages/count_tokens 预统计。返回估算值。
+async fn handle_count_tokens(
+    State(state): State<AppState>,
+    headers: HeaderMap,
+    Json(req): Json<MessagesRequest>,
+) -> Response {
+    if let Err(e) = check_api_key(&state.cfg, &state.api_keys, &headers) {
+        return anthropic_error(e);
+    }
+    let prompt = build_prompt(&req.messages, req.system.as_ref());
+    Json(serde_json::json!({ "input_tokens": crate::protocol::estimate_tokens(&prompt) })).into_response()
+}
+
 // ---------- 共享逻辑 ----------
 
 /// 调用上游；命中注册/额度哨兵时返回明确的可读错误
@@ -379,7 +395,7 @@ async fn call_upstream(
         .map_err(|e| ApiError::upstream(e.to_string()))?;
     if resp.is_quota_gated() {
         return Err(ApiError::rate_limited(
-            "上游免费额度已用尽：请稍后再试或更换网络出口（perfectassistant.ai 免费层限额）",
+            "上游免费限流：约 60 次/小时/IP。请稍后再试（约 1 小时）或更换网络出口",
         ));
     }
     let text = resp.best_text();

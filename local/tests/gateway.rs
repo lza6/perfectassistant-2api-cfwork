@@ -267,6 +267,19 @@ async fn api_key_enforced_when_configured() {
 }
 
 #[tokio::test]
+async fn count_tokens_ok() {
+    let (app, _) = make_app("ok").await;
+    let req = post_json(
+        "/v1/messages/count_tokens",
+        serde_json::json!({ "model": "summarize", "messages": [{ "role": "user", "content": "hello there count my tokens" }] }),
+    );
+    let resp = app.oneshot(req).await.unwrap();
+    assert_eq!(resp.status(), StatusCode::OK);
+    let v: serde_json::Value = serde_json::from_str(&body_string(resp).await).unwrap();
+    assert!(v["input_tokens"].as_u64().unwrap() > 0);
+}
+
+#[tokio::test]
 async fn healthz_ok() {
     let (app, _) = make_app("ok").await;
     let resp = app

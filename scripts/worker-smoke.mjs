@@ -124,6 +124,17 @@ console.log("== Anthropic 流式 ==");
   ok("含 message_stop", s.includes("event: message_stop"));
 }
 
+console.log("== Claude Code count_tokens ==");
+{
+  const r = await call("/v1/messages/count_tokens", {
+    method: "POST",
+    headers: { "Content-Type": "application/json", Authorization: "Bearer 1" },
+    body: JSON.stringify({ model: "summarize", messages: [{ role: "user", content: "hello there, count my tokens please" }] }),
+  });
+  const j = JSON.parse(await body(r));
+  ok("返回 input_tokens", typeof j.input_tokens === "number" && j.input_tokens > 0, JSON.stringify(j));
+}
+
 console.log("== 额度哨兵 → 429 ==");
 {
   globalThis.__MODE = "quota";

@@ -75,7 +75,16 @@ Accept: */*
 
 **伪流式**：上游非流式，网关把 `response` 切块、按间隔逐帧下发为 SSE，模拟打字机效果。
 
-**额度哨兵**：`responses[0]` 若包含字符串 `Sign up to continue using Perfect Assistant!`，表示免费额度用尽 / 需登录注册。前端据此弹注册框；网关应转译为 `429 rate_limit_error`（勿把哨兵当正文透传）。
+**额度哨兵**：`responses[*]` 若包含字符串 `Sign up to continue using Perfect Assistant!`，表示免费额度用尽 / 需登录注册。前端据此弹注册框；网关应转译为 `429 rate_limit_error`（勿把哨兵当正文透传）。
+
+实测两种哨兵形态（见 [`E2E.md`](E2E.md)）：
+
+| 触发 | 响应文本 |
+|------|----------|
+| 每小时限流（60 次/IP） | `You've used your hourly request limit (60 requests). Sign up to continue using Perfect Assistant!` |
+| 需登录 | （含 `Sign up to continue using Perfect Assistant!`） |
+
+> ⚠️ **限流时 HTTP 状态码仍是 200** —— 必须检测文本哨兵，不能只看状态码。
 
 ## 4. 工具目录（62 个）
 
@@ -102,8 +111,13 @@ Accept: */*
 
 - 首页由 Next.js SSR 提供；静态资源经 Cloudflare（`/cdn-cgi/`）。
 - `/ai/free` 实测匿名可达，未强制 Cloudflare 挑战。
-- 免费层按 IP / 会话限流，用尽后返回额度哨兵（见第 3 节）。
+- **限流：60 次/小时/IP**（实测触发），超限返回 HTTP 200 + 文本哨兵（见第 3 节）。
+- **延迟**：多数工具 0.7–3.7s；`ocr-text` 约 20s（超时需 ≥ 30s）。
 - 建议：遵守上游服务条款，仅作个人学习/研究用途；高并发场景自行限速。
+
+## 6. 实测可用性
+
+62 个工具已逐个真实 E2E 验证，结论见 [`E2E.md`](E2E.md)（60/62 可用，其余 2 个为限流非故障）。
 
 ## 6. 复现抓取
 

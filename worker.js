@@ -78,6 +78,8 @@ export default {
         return handleOpenAI(request, apiKey);
       case "/v1/messages":
         return handleAnthropic(request, apiKey);
+      case "/v1/messages/count_tokens":
+        return handleCountTokens(request, apiKey);
       case "/healthz":
         return new Response(
           JSON.stringify({ status: "ok", models: ALL_MODELS.length, upstream: CONFIG.ORIGIN_URL }),
@@ -143,10 +145,13 @@ async function callUpstream(toolId, prompt, tone, language) {
     "";
 
   if (text.includes(QUOTA_SENTINEL)) {
+    const hourly = /hourly request limit \(60 requests\)/.test(text);
     return {
       ok: false,
       status: 429,
-      message: "上游免费额度已用尽: 请稍后再试或更换网络出口 (perfectassistant.ai 免费层限额)",
+      message: hourly
+        ? "上游免费限流：已达 60 次/小时/IP。请稍后再试（约 1 小时）或更换网络出口"
+        : "上游免费额度已用尽/需登录：请稍后再试或更换网络出口",
     };
   }
   if (!text.trim()) {
@@ -320,8 +325,20 @@ function anthropicFrames(content, model, id, inputTokens) {
   return frames;
 }
 
-// --- [第七部分: 流/模型/辅助] ---
+// --- [第七部分: Claude Code 兼容] ---
 
+/** Claude Code 会调用 /v1/messages/count_tokens 预统计。返回估算值。 */
+async function handleCountTokens(request, apiKey) {
+  if (!verifyAuth(request, apiKey)) return createErrorResponse("未授权", 401, "unauthorized", true);
+  let body;
+  try { body = await request.json(); } catch { return createErrorResponse("无效 JSON", 400, "invalid_json", true); }
+  const prompt = extractPrompt(body.messages || [], body.system);
+  return new Response(JSON.stringify({ input_tokens: estimateTokens(prompt) }), {
+    headers: corsHeaders({ "Content-Type": "application/json" }),
+  });
+}
+
+// --- [第八部分: 流/模型/辅助] ---
 /** 把帧数组转成 SSE Response (带可选分块延迟) */
 function streamFromFrames(frames, anthropic = false) {
   const encoder = new TextEncoder();
@@ -373,7 +390,7 @@ function handleModels(request, apiKey) {
   });
 }
 
-// --- [第八部分: 认证 / CORS / 错误] ---
+// --- [第九部分: 认证 / CORS / 错误] ---
 
 function verifyAuth(request, validKey) {
   if (validKey === "1" || !validKey) return true; // 弱密钥/未配置: 放行
@@ -405,7 +422,7 @@ function corsHeaders(headers = {}) {
   };
 }
 
-// --- [第九部分: 开发者控制台 UI] ---
+// --- [第十部分: 开发者控制台 UI] ---
 function handleUI(request, apiKey) {
   const origin = new URL(request.url).origin;
   const modelsJson = JSON.stringify(

@@ -113,6 +113,7 @@ claude
 |------|------|------|
 | `/v1/chat/completions` | POST | OpenAI 聊天（流式 / 非流式） |
 | `/v1/messages` | POST | Anthropic 聊天（流式 / 非流式），供 Claude Code |
+| `/v1/messages/count_tokens` | POST | token 预估（Claude Code 会调用） |
 | `/v1/models` | GET | 62 个工具模型列表 |
 | `/healthz` | GET | 健康检查 |
 | `/api/guide` | GET | 接入信息（本地版） |
@@ -132,21 +133,25 @@ claude
 
 完整清单见 [`docs/PROTOCOL.md`](docs/PROTOCOL.md#4-工具目录62-个)。
 
-> ⚠️ 请遵守上游服务条款，仅作个人学习 / 研究用途。免费层按 IP/会话限流，额度用尽时网关返回 `429`。
+> ⚠️ 请遵守上游服务条款，仅作个人学习 / 研究用途。
+> **实测限流：60 次/小时/IP**（超限返回 429）；完整可用性评测见 [`docs/E2E.md`](docs/E2E.md)（62 个工具逐个真实验证）。
 
 ---
 
 ## 五、开发与测试
 
 ```bash
-# CF Worker 冒烟测试（mock 上游，26 项）
+# CF Worker 冒烟测试（mock 上游，27 项）
 npm test
 
-# 本地 Rust 测试（27 项：单元 + 集成）
+# 全量模型真实 E2E（逐个打上游，约 8 分钟；会消耗 60/小时额度）
+node scripts/e2e-all-models.mjs
+
+# 本地 Rust 测试（28 项：单元 + 集成）
 cd local && cargo test
 ```
 
-逆向证据与抓取方法见 [`docs/PROTOCOL.md`](docs/PROTOCOL.md)。
+逆向证据见 [`docs/PROTOCOL.md`](docs/PROTOCOL.md)，实测可用性见 [`docs/E2E.md`](docs/E2E.md)。
 
 ## 六、相关项目
 
